@@ -1,0 +1,33 @@
+services:
+  postgres:
+    ports:
+      - "5433:5432"
+
+  gateway:
+    volumes:
+      - ./services/gateway/app:/app/services/gateway/app
+      - ./packages:/app/packages
+    command: uvicorn services.gateway.app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  cases:
+    volumes:
+      - ./services/cases/app:/app/services/cases/app
+      - ./packages:/app/packages
+      - ./migrations:/app/migrations
+    command: uvicorn services.cases.app.main:app --host 0.0.0.0 --port 8002 --reload
+
+  llm:
+    volumes:
+      - ./services/llm/app:/app/services/llm/app
+      - ./packages:/app/packages
+    command: uvicorn services.llm.app.main:app --host 0.0.0.0 --port 8004 --reload
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules

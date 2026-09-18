@@ -1,0 +1,50 @@
+# Runtime / local artefacts — never publish
+/data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Dependencies and build
+frontend/node_modules/
+frontend/dist/
+**/__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs / caches
+*.log
+frontend/tsconfig.tsbuildinfo
+.requirements_installed
+
+# Model weights
+*.gguf
+*.ggml
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.bin
+
+# Datasets / dumps / archives
+*.csv
+*.jsonl
+*.xlsx
+*.rar
+*.zip
+packages/platform_plugins/processors/_notebook_extracted.py
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

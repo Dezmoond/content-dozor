@@ -1,0 +1,132 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: platform
+      POSTGRES_PASSWORD: platform
+      POSTGRES_DB: platform
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+
+  auth:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+
+  cases:
+    build:
+      context: .
+      dockerfile: services/cases/Dockerfile
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+      - ${DIPLOM_ROOT:-../}:/diplom:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8002:8002"
+
+  parsers:
+    build:
+      context: .
+      dockerfile: services/parsers/Dockerfile
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+      - ${DIPLOM_ROOT:-../}/parser_zapret:/diplom/parser_zapret:ro
+      - ${DIPLOM_ROOT:-../}/dataset/blacklist:/diplom/dataset/blacklist
+    depends_on:
+      - redis
+      - cases
+    ports:
+      - "8003:8003"
+
+  llm:
+    build:
+      context: .
+      dockerfile: services/llm/Dockerfile
+    env_file: .env
+    volumes:
+      - ${DIPLOM_ROOT:-../}:/diplom:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis
+      - cases
+    ports:
+      - "8004:8004"
+
+  reports:
+    build:
+      context: .
+      dockerfile: services/reports/Dockerfile
+    env_file: .env
+    depends_on:
+      - cases
+    ports:
+      - "8005:8005"
+
+  worker:
+    build:
+      context: .
+      dockerfile: services/worker/Dockerfile
+    env_file: .env
+    volumes:
+      - ./data:/app/data
+      - ${DIPLOM_ROOT:-../}:/diplom:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - redis
+      - postgres
+      - cases
+      - llm
+      - parsers
+
+  gateway:
+    build:
+      context: .
+      dockerfile: services/gateway/Dockerfile
+    env_file: .env
+    depends_on:
+      - auth
+      - cases
+      - parsers
+      - llm
+      - reports
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - gateway
+
+volumes:
+  pgdata:
