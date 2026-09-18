@@ -1,37 +1,12 @@
-# Контент Дозор — оболочка платформы анализа
+# Оболочка платформы
 
-В этом репозитории — **код оболочки** (сервисы, UI, пайплайн).  
-Не входят и не должны попадать в git: датасеты, веса моделей, логи, выгрузки реестров, загруженные документы, примеры прогонов.
-
-Модели GGUF и CSV-реестры подключаются локально (`F:/DIPLOM_GGUF`, `analysis_platform/data/blacklist`).
+Модели GGUF и CSV-реестры подключаются локально (`/GUF`, `analysis_platform/data/blacklist`).
 
 ## Quick start (Windows, local)
 
-```powershell
-cd E:\CURSOR\DIPLOM\analysis_platform
+```
 .\start_platform.ps1
 ```
-
-Проверка статуса без запуска:
-
-```powershell
-.\start_platform.ps1 -StatusOnly
-```
-
-Остановка:
-
-```powershell
-.\start_platform.ps1 -Stop
-```
-
-Скрипт `start_platform.ps1`:
-- проверяет Python, pip, npm, Redis, llama.cpp (3 GGUF-сервера)
-- устанавливает зависимости (`requirements.txt`, `npm install`)
-- поднимает Redis через Docker (если доступен)
-- запускает `llama-server` (CUDA, `-ngl 99`) с моделями из `F:\DIPLOM_GGUF`
-- режим `single`: одна модель на GPU, переключение по роли (для 16 GB VRAM)
-- стартует все микросервисы (8000–8005), Celery worker, frontend
-- ждёт `/health` и выводит таблицу готовности
 
 Логи: `analysis_platform/data/logs/`
 ## Quick start (Docker)
